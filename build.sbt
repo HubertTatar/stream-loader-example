@@ -5,5 +5,5 @@ ThisBuild / scalaVersion := "2.13.12"
 lazy val root = (project in file("."))
   .settings(
     name := "stream-loader-example",
-    idePackagePrefix := Some("io.huta")
+    idePackagePrefix := Some("io.huta.sle")
   )
