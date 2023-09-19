@@ -1,6 +1,9 @@
 
 Commands:
     
+    cd env
+    docker compose up
+
     docker exec -it {container id} bash 
     hdfs dfs -ls /
 
