@@ -1,8 +1,10 @@
-package io.huta
 package io.huta.sle
+
+import proto.greet.GreetRequest
+
 
 object Runner {
   def main(args: Array[String]): Unit = {
-    println("run")
+    println(GreetRequest("asd"))
   }
 }
