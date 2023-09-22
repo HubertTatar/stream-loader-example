@@ -5,7 +5,7 @@ import com.adform.streamloader.model.Timestamp
 import com.adform.streamloader.sink.file._
 import com.adform.streamloader.source.KafkaSource
 import com.adform.streamloader.util.TimeExtractor
-import io.huta.sle.proto.greet.GreetRequest
+import io.huta.sle.proto.Greet.GreetRequest
 import io.huta.sle.protobuf.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem

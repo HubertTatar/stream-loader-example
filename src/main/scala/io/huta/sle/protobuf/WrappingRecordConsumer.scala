@@ -1,5 +1,4 @@
-package io.huta.sle
-package protobuf
+package io.huta.sle.protobuf
 
 import org.apache.parquet.io.api.{Binary, RecordConsumer}
 

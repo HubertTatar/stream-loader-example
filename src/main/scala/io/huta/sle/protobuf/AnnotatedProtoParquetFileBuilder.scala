@@ -1,5 +1,4 @@
-package io.huta.sle
-package protobuf
+package io.huta.sle.protobuf
 
 import java.io.File
 import com.adform.streamloader.sink.file._
