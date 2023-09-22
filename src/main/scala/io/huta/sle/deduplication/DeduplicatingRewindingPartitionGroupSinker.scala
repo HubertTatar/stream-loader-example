@@ -4,8 +4,7 @@ import com.adform.streamloader.model.{StreamInterval, StreamRecord}
 import com.adform.streamloader.sink.{PartitionGroupSinker, RewindingPartitionGroupSinker}
 import com.adform.streamloader.util.Logging
 
-import scala.collection.mutable
-
+//todo pass metrics, remove logging
 class DeduplicatingRewindingPartitionGroupSinker(baseSinker: PartitionGroupSinker, interval: StreamInterval)
     extends RewindingPartitionGroupSinker(baseSinker, interval)
     with Logging {

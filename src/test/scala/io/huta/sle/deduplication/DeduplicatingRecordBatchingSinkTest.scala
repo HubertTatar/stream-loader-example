@@ -1,9 +1,9 @@
 package io.huta.sle.deduplication
 
-import io.huta.sle.Configurations
 import io.huta.sle.test.MockKafkaContext
 import com.adform.streamloader.model.{StreamRecord, Timestamp}
 import com.adform.streamloader.util.Logging
+import io.huta.sle.config.Configurations
 import io.huta.sle.proto.Greet.GreetRequest
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.TopicPartition

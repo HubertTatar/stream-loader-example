@@ -1,5 +1,6 @@
 package io.huta.sle
 
+import io.huta.sle.config.Configurations
 import org.apache.hadoop.fs.Path
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers

@@ -1,4 +1,4 @@
-package io.huta.sle
+package io.huta.sle.config
 
 import com.adform.streamloader.hadoop.HadoopFileStorage
 import com.adform.streamloader.model.{StreamInterval, Timestamp}
@@ -21,17 +21,16 @@ object Configurations {
   def hadoopFileSystem(): FileSystem = {
     val hadoopConf = new Configuration()
     hadoopConf.set("fs.defaultFS", "hdfs://localhost:9000")
-//    hadoopConf.set("dfs.nameservices", "nameservice1")
     hadoopConf.set("fs.hdfs.impl.disable.cache", "true")
     FileSystem.get(hadoopConf)
   }
 
-  def kafkaSource(): KafkaSource =
+  def kafkaSource(properties: Properties, topics: Seq[String]): KafkaSource =
     KafkaSource
       .builder()
-      .consumerProperties(kafkaProps())
+      .consumerProperties(properties)
       .pollTimeout(Duration.ofSeconds(1))
-      .topics(Seq("greetings_topic"))
+      .topics(topics)
       .build()
 
   def kafkaProps(): Properties = {
