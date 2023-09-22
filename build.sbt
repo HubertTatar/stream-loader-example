@@ -8,6 +8,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.apache.parquet"    % "parquet-protobuf"               % "1.13.1",
       "com.thesamet.scalapb" %% "scalapb-runtime"                % scalapb.compiler.Version.scalapbVersion % "protobuf",
+      "it.unimi.dsi"          % "fastutil"                       % "8.5.9",
       "com.adform"           %% "stream-loader-hadoop"           % "0.2.14",
       "io.micrometer"         % "micrometer-registry-prometheus" % "1.11.4",
       "io.micrometer"         % "micrometer-registry-jmx"        % "1.11.4",

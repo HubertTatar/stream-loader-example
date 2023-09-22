@@ -1,10 +1,12 @@
 package io.huta.sle
 
 import com.adform.streamloader.hadoop.HadoopFileStorage
-import com.adform.streamloader.model.Timestamp
+import com.adform.streamloader.model.{StreamInterval, Timestamp}
+import com.adform.streamloader.sink.batch.RecordBatchingSink
 import com.adform.streamloader.sink.file._
 import com.adform.streamloader.source.KafkaSource
 import com.adform.streamloader.util.TimeExtractor
+import io.huta.sle.deduplication.DeduplicatingRecordBatchingSink
 import io.huta.sle.proto.Greet.GreetRequest
 import io.huta.sle.protobuf.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
 import org.apache.hadoop.conf.Configuration
@@ -69,7 +71,7 @@ object Configurations {
 
   def parseFixedFileCommitStrategy(): FileCommitStrategy.ReachedAnyOf =
     FileCommitStrategy.ReachedAnyOf(
-      recordsWritten = Some(10_000_000),
+      recordsWritten = Some(6),
       fileOpenDuration = Some(Duration.ofMinutes(5)),
       fileSize = Some(256000000)
     )
@@ -92,4 +94,23 @@ object Configurations {
       .build()
   }
 
+  def deduplicatingSink(
+      fileSystem: FileSystem
+  ): DeduplicatingRecordBatchingSink[PartitionedFileRecordBatch[LocalDateTime, SingleFileRecordBatch]] =
+    DeduplicatingRecordBatchingSink
+      .builder()
+      .recordBatcher(Configurations.recordBatcher())
+      .batchStorage(Configurations.batchStorage(fileSystem))
+      .batchCommitQueueSize(1)
+      .interval(StreamInterval.OffsetRange(1000))
+      .build()
+
+  private def buildSink(
+      fileSystem: FileSystem
+  ): RecordBatchingSink[PartitionedFileRecordBatch[LocalDateTime, SingleFileRecordBatch]] = RecordBatchingSink
+    .builder()
+    .recordBatcher(Configurations.recordBatcher())
+    .batchStorage(Configurations.batchStorage(fileSystem))
+    .batchCommitQueueSize(1)
+    .build()
 }
