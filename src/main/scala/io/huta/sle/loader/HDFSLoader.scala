@@ -3,14 +3,19 @@ package io.huta.sle.loader
 import com.adform.streamloader.hadoop.HadoopFileStorage
 import com.adform.streamloader.model.{StreamInterval, Timestamp}
 import com.adform.streamloader.sink.Sink
-import com.adform.streamloader.sink.file.{Compression, FileCommitStrategy, MultiFileCommitStrategy, PartitioningFileRecordBatcher, TimePartitioningFilePathFormatter}
+import com.adform.streamloader.sink.file.{
+  Compression,
+  FileCommitStrategy,
+  MultiFileCommitStrategy,
+  PartitioningFileRecordBatcher,
+  TimePartitioningFilePathFormatter
+}
 import com.adform.streamloader.util.{GaussianDistribution, TimeExtractor}
 import com.google.protobuf.Message
 import com.typesafe.config.Config
 import io.huta.sle.config.ConfigExtensions.RichConfig
 import io.huta.sle.deduplication.DeduplicatingRecordBatchingSink
 import io.huta.sle.protobuf.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
-import io.micrometer.core.instrument.MeterRegistry
 import org.apache.hadoop.fs.FileSystem
 
 import java.time.{Duration, LocalDateTime, ZoneId}
@@ -18,8 +23,7 @@ import scala.reflect.ClassTag
 
 abstract class HDFSLoader[R <: Message: ClassTag](
     fileSystem: FileSystem,
-    config: Config,
-    metricRegistry: MeterRegistry
+    config: Config
 ) extends Loader {
 
   def buildSink(): Sink = DeduplicatingRecordBatchingSink
@@ -28,7 +32,6 @@ abstract class HDFSLoader[R <: Message: ClassTag](
     .batchStorage(batchStorage(fileSystem))
     .batchCommitQueueSize(config.getInt("file.commit.queue.size"))
     .interval(StreamInterval.OffsetRange(config.getInt("key-cache-size")))
-    .metricRegistry(metricRegistry)
     .keyCacheSize(config.getInt("key-cache-size"))
     .build()
 

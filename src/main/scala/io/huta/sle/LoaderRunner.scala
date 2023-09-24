@@ -42,8 +42,8 @@ object LoaderRunner extends Logging {
 
     val loader = Class
       .forName(cfg.getString("loader.clazz"))
-      .getConstructor(classOf[FileSystem], classOf[Config], classOf[MeterRegistry])
-      .newInstance(fileSystem, cfg, metricRegistry)
+      .getConstructor(classOf[FileSystem], classOf[Config])
+      .newInstance(fileSystem, cfg)
       .asInstanceOf[Loader]
 
     Thread.currentThread().setName("main-thread")

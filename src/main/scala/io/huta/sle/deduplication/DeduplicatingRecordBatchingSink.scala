@@ -5,8 +5,7 @@ import com.adform.streamloader.sink.batch.storage.RecordBatchStorage
 import com.adform.streamloader.sink.batch.{RecordBatch, RecordBatcher, RecordBatchingSinker}
 import com.adform.streamloader.sink.{RewindingPartitionGroupSinker, Sink}
 import com.adform.streamloader.source.KafkaContext
-import com.adform.streamloader.util.Retry
-import io.micrometer.core.instrument.MeterRegistry
+import com.adform.streamloader.util.{MetricTag, Metrics, Retry}
 import org.apache.kafka.common.TopicPartition
 
 import java.time.Duration
@@ -20,9 +19,9 @@ class DeduplicatingRecordBatchingSink[+B <: RecordBatch](
     partitionGrouping: TopicPartition => String,
     retryPolicy: Retry.Policy,
     interval: StreamInterval,
-    metricRegistry: MeterRegistry,
     keyCacheSize: Int
-) extends RewindingPartitionGroupingSink {
+) extends RewindingPartitionGroupingSink
+    with Metrics {
 
   override def initialize(context: KafkaContext): Unit = {
     batchStorage.initialize(context)
@@ -54,9 +53,13 @@ class DeduplicatingRecordBatchingSink[+B <: RecordBatch](
       batchCommitQueueSize,
       retryPolicy
     )
-    new DeduplicatingRewindingPartitionGroupSinker(baseSinker, interval, metricRegistry, keyCacheSize)
+    val partitions = groupPartitions.collect(p => p.partition()).map(num => MetricTag("partition", num.toString)).toSeq
+    val thread = MetricTag("loader-thread", Thread.currentThread().getName)
+    val counter = createCounter("duplicates", partitions :+ thread)
+    new DeduplicatingRewindingPartitionGroupSinker(baseSinker, interval, counter, keyCacheSize)
   }
 
+  override protected def metricsRoot: String = "sink"
 }
 
 object DeduplicatingRecordBatchingSink {
@@ -67,7 +70,6 @@ object DeduplicatingRecordBatchingSink {
       private val _partitionGrouping: TopicPartition => String,
       private val _retryPolicy: Retry.Policy,
       private val _interval: StreamInterval,
-      private val _metricRegistry: MeterRegistry,
       private val _keyCacheSize: Int
   ) extends Sink.Builder {
 
@@ -95,14 +97,11 @@ object DeduplicatingRecordBatchingSink {
 
     def interval(interval: StreamInterval): Builder[B] = copy(_interval = interval)
 
-    def metricRegistry(metricRegistry: MeterRegistry): Builder[B] = copy(_metricRegistry = metricRegistry)
-
     def keyCacheSize(keyCacheSize: Int): Builder[B] = copy(_keyCacheSize = keyCacheSize)
 
     def build(): DeduplicatingRecordBatchingSink[B] = {
       if (_recordBatcher == null) throw new IllegalStateException("Must specify a RecordBatcher")
       if (_batchStorage == null) throw new IllegalStateException("Must specify a RecordBatchStorage")
-      if (_metricRegistry == null) throw new IllegalStateException("Must specify a RecordBatchStorage")
 
       new DeduplicatingRecordBatchingSink[B](
         _recordBatcher,
@@ -111,7 +110,6 @@ object DeduplicatingRecordBatchingSink {
         _partitionGrouping,
         _retryPolicy,
         _interval,
-        _metricRegistry,
         _keyCacheSize
       )
     }
@@ -124,7 +122,6 @@ object DeduplicatingRecordBatchingSink {
     _partitionGrouping = _ => "root",
     _retryPolicy = Retry.Policy(retriesLeft = 5, initialDelay = 1.seconds, backoffFactor = 3),
     _interval = StreamInterval.WatermarkRange(Duration.ofMillis(0)),
-    _metricRegistry = null,
     _keyCacheSize = 0
   )
 }

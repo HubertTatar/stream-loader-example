@@ -4,5 +4,4 @@ import io.huta.sle.proto.Greet.GreetRequest
 import io.micrometer.core.instrument.MeterRegistry
 import org.apache.hadoop.fs.FileSystem
 
-class GreetHDFSLoader(fileSystem: FileSystem, config: Config, metricRegistry: MeterRegistry)
-    extends HDFSLoader[GreetRequest](fileSystem, config, metricRegistry) {}
+class GreetHDFSLoader(fileSystem: FileSystem, config: Config) extends HDFSLoader[GreetRequest](fileSystem, config) {}
