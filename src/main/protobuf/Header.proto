@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package messages;
+
+option java_package = "io.huta.sle.proto";
+
+message Header {
+  string uuid = 1;
+  string original_producer = 2;
+  string recent_producer = 3;
+  sfixed64 creation_time = 4;
+}

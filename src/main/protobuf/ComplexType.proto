@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package messages;
+
+option java_package = "io.huta.sle.proto";
+
+import "Header.proto";
+
+message ComplexType {
+  Header header = 1;
+  int64 id = 2;
+  string name = 3;
+  double price = 4;
+  bool isOn = 5;
+  repeated int32 somethings = 6;
+}
+

@@ -15,7 +15,7 @@ import com.google.protobuf.Message
 import com.typesafe.config.Config
 import io.huta.sle.config.ConfigExtensions.RichConfig
 import io.huta.sle.deduplication.DeduplicatingRecordBatchingSink
-import io.huta.sle.protobuf.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
+import io.huta.sle.extension.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
 import org.apache.hadoop.fs.FileSystem
 
 import java.time.{Duration, LocalDateTime, ZoneId}

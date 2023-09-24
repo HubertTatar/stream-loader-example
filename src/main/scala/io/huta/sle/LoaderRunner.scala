@@ -6,9 +6,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import io.huta.sle.metrics.Metrics
 import io.huta.sle.config.ConfigExtensions._
 import io.huta.sle.config.ConfigUtil._
-import io.huta.sle.config.Configurations
+import io.huta.sle.config.{HadoopFileSystem, KafkaSources}
 import io.huta.sle.loader.Loader
-import io.micrometer.core.instrument.MeterRegistry
 import org.apache.hadoop.fs.FileSystem
 
 import java.util.concurrent.{ConcurrentHashMap, Executors}
@@ -36,9 +35,9 @@ object LoaderRunner extends Logging {
 
     val consumerProps = cfg.getConfig("kafka.consumer").toProperties
     val topics = cfg.getString("topics").split(",").toSeq
-    val source = Configurations.kafkaSource(consumerProps, topics)
+    val source = KafkaSources.kafkaSource(consumerProps, topics)
 
-    val fileSystem = Configurations.hadoopFileSystem()
+    val fileSystem = HadoopFileSystem.hadoopFileSystem(cfg.getString("hdfs.defaultFS.url"))
 
     val loader = Class
       .forName(cfg.getString("loader.clazz"))
@@ -70,6 +69,7 @@ object LoaderRunner extends Logging {
       )
     )
 
+    metricServer.start()
     log.info("Starting loader threads")
     consumerThreads.foreach { case (_, thread) => thread.start() }
   }

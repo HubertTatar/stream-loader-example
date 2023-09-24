@@ -1,4 +1,4 @@
-package io.huta.sle.protobuf
+package io.huta.sle.extension
 
 import com.google.protobuf.{Descriptors, Message}
 import org.apache.hadoop.conf.Configuration

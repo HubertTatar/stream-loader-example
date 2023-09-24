@@ -1,4 +1,4 @@
-package io.huta.sle.protobuf
+package io.huta.sle.extension
 
 import com.adform.streamloader.model.StreamRecord
 import com.adform.streamloader.sink.batch.RecordFormatter

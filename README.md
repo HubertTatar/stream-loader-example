@@ -9,9 +9,17 @@ Commands:
     docker exec -it {container id} bash 
     hdfs dfs -ls /
 
-Kafdrop
+Tools
     
-    http://localhost:19000/
+    kafdrop - http://localhost:19000/
+    zoonavigator - http://localhost:19001/
+    prmoetheus - http://localhost:19002/
+    graphana - http://localhost:19003/
+
+Grafana
+
+    Register new source as `prometheus`
+    Import dashboard from `dashboard.json`
     
 
 Flags:
@@ -22,3 +30,4 @@ Links:
  - https://github.com/big-data-europe/docker-hadoop
  - https://scalapb.github.io/docs/getting-started
  - https://github.com/lightbend/config
+ - https://prometheus.io/docs/prometheus/latest/configuration/configuration/
