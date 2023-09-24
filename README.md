@@ -18,9 +18,12 @@ Tools
 
 Grafana
 
-    Register new source as `prometheus`
+    Register new source as `http://prometheus:9090`
     Import dashboard from `dashboard.json`
     
+Metrics:
+    
+    http://localhost:8081/metrics
 
 Flags:
  
