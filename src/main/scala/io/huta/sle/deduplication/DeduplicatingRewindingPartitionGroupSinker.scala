@@ -3,13 +3,18 @@ package io.huta.sle.deduplication
 import com.adform.streamloader.model.{StreamInterval, StreamRecord}
 import com.adform.streamloader.sink.{PartitionGroupSinker, RewindingPartitionGroupSinker}
 import com.adform.streamloader.util.Logging
+import io.micrometer.core.instrument.MeterRegistry
 
 //todo pass metrics, remove logging
-class DeduplicatingRewindingPartitionGroupSinker(baseSinker: PartitionGroupSinker, interval: StreamInterval)
-    extends RewindingPartitionGroupSinker(baseSinker, interval)
+class DeduplicatingRewindingPartitionGroupSinker(
+    baseSinker: PartitionGroupSinker,
+    interval: StreamInterval,
+    metricRegistry: MeterRegistry,
+    keyCacheSize: Int
+) extends RewindingPartitionGroupSinker(baseSinker, interval)
     with Logging {
 
-  private val cache: FifoHashSet[String] = FifoHashSet.apply(2000)
+  private val cache: FifoHashSet[String] = FifoHashSet.apply(keyCacheSize)
 
   override def write(record: StreamRecord): Unit = {
     val key = record.consumerRecord.key()
