@@ -1,7 +1,7 @@
 package io.huta.sle
 
 import com.adform.streamloader.StreamLoader
-import io.huta.sle.config.{Configurations, KafkaSources, SimpleConfiguration}
+import io.huta.sle.config.{KafkaSources, SimpleConfiguration}
 import io.huta.sle.metrics.Metrics
 
 import java.util.concurrent.Executors
@@ -15,7 +15,7 @@ object SimpleRunner {
     val fileSystem = SimpleConfiguration.hadoopFileSystem()
     val source = KafkaSources.kafkaSource(SimpleConfiguration.kafkaProps(), Seq("greetings_topic"))
 
-    val sink = SimpleConfiguration.deduplicatingSink(fileSystem)
+    val sink = SimpleConfiguration.buildSink(fileSystem)
     val loader = new StreamLoader(source, sink)
 
     loader.setMetricRegistry(registry)

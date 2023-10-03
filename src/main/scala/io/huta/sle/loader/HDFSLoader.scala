@@ -15,8 +15,14 @@ import com.google.protobuf.Message
 import com.typesafe.config.Config
 import io.huta.sle.config.ConfigExtensions.RichConfig
 import io.huta.sle.deduplication.DeduplicatingRecordBatchingSink
-import io.huta.sle.extension.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
+import io.huta.sle.extension.{
+  AnnotatedProtoParquetFileBuilder,
+  AnnotatedProtoRecord,
+  GenericRecordFormatter,
+  TopicPartitionFilePathFormatter
+}
 import org.apache.hadoop.fs.FileSystem
+import org.apache.kafka.common.TopicPartition
 
 import java.time.{Duration, LocalDateTime, ZoneId}
 import scala.reflect.ClassTag
@@ -30,6 +36,15 @@ abstract class HDFSLoader[R <: Message: ClassTag](
     .builder()
     .recordBatcher(recordBatcher())
     .batchStorage(batchStorage(fileSystem))
+    .batchCommitQueueSize(config.getInt("file.commit.queue.size"))
+    .interval(StreamInterval.OffsetRange(config.getInt("key-cache-size")))
+    .keyCacheSize(config.getInt("key-cache-size"))
+    .build()
+
+  def buildSinkByTopicPartition(): Sink = DeduplicatingRecordBatchingSink
+    .builder()
+    .recordBatcher(recordBatcherByTopicPartition())
+    .batchStorage(batchStorageByTopicPartition(fileSystem))
     .batchCommitQueueSize(config.getInt("file.commit.queue.size"))
     .interval(StreamInterval.OffsetRange(config.getInt("key-cache-size")))
     .keyCacheSize(config.getInt("key-cache-size"))
@@ -60,6 +75,25 @@ abstract class HDFSLoader[R <: Message: ClassTag](
       .build()
   }
 
+  private def recordBatcherByTopicPartition()
+      : PartitioningFileRecordBatcher[TopicPartition, AnnotatedProtoRecord[R]] = {
+    PartitioningFileRecordBatcher
+      .builder()
+      .recordFormatter(new GenericRecordFormatter[R])
+      .recordPartitioner((r, _) => r.topicPartition)
+      .fileBuilderFactory(_ =>
+        new AnnotatedProtoParquetFileBuilder[R](
+          compression = parseCompression(config.getStringOpt("file.compression")),
+          blockSize = config.getInt("file.block.size.bytes"),
+          pageSize = config.getInt("file.page.size.bytes")
+        )
+      )
+      .fileCommitStrategy(
+        MultiFileCommitStrategy.anyFile(parseFixedFileCommitStrategy(config.getConfig("file.max")))
+      )
+      .build()
+  }
+
   private def batchStorage(hadoopFileSystem: FileSystem): HadoopFileStorage[LocalDateTime] = {
     implicit val localDateTime: TimeExtractor[LocalDateTime] =
       (value: LocalDateTime) => Timestamp(value.atZone(ZoneId.of("UTC")).toInstant.toEpochMilli)
@@ -73,6 +107,20 @@ abstract class HDFSLoader[R <: Message: ClassTag](
         new TimePartitioningFilePathFormatter[LocalDateTime](
           Some(config.getString("file.time-partition.pattern")),
           None
+        )
+      )
+      .build()
+  }
+
+  private def batchStorageByTopicPartition(hadoopFileSystem: FileSystem): HadoopFileStorage[TopicPartition] = {
+    HadoopFileStorage
+      .builder()
+      .hadoopFS(hadoopFileSystem)
+      .stagingBasePath(config.getString("staging-directory"))
+      .destinationBasePath(config.getString("base-directory"))
+      .destinationFilePathFormatter(
+        new TopicPartitionFilePathFormatter(
+          Some(config.getString("file.time-partition.pattern"))
         )
       )
       .build()

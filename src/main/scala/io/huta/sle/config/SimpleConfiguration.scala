@@ -2,6 +2,7 @@ package io.huta.sle.config
 
 import com.adform.streamloader.hadoop.HadoopFileStorage
 import com.adform.streamloader.model.{StreamInterval, Timestamp}
+import com.adform.streamloader.sink.Sink
 import com.adform.streamloader.sink.batch.RecordBatchingSink
 import com.adform.streamloader.sink.file.{
   Compression,
@@ -15,10 +16,17 @@ import com.adform.streamloader.sink.file.{
 import com.adform.streamloader.util.TimeExtractor
 import io.huta.sle.deduplication.DeduplicatingRecordBatchingSink
 import io.huta.sle.proto.ComplexTypeOuterClass.ComplexType
-import io.huta.sle.extension.{AnnotatedProtoParquetFileBuilder, AnnotatedProtoRecord, GenericRecordFormatter}
+import io.huta.sle.extension.{
+  AnnotatedProtoParquetFileBuilder,
+  AnnotatedProtoRecord,
+  GenericRecordFormatter,
+  TopicPartitionFilePathFormatter
+}
 import org.apache.hadoop.fs.FileSystem
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.hadoop.conf.Configuration
+import org.apache.kafka.common.TopicPartition
+
 import java.time.{Duration, LocalDateTime, ZoneId}
 import java.util.Properties
 
@@ -100,9 +108,10 @@ object SimpleConfiguration {
       .batchStorage(batchStorage(fileSystem))
       .batchCommitQueueSize(1)
       .interval(StreamInterval.OffsetRange(1000))
+      .keyCacheSize(10)
       .build()
 
-  private def buildSink(
+  def buildSink(
       fileSystem: FileSystem
   ): RecordBatchingSink[PartitionedFileRecordBatch[LocalDateTime, SingleFileRecordBatch]] = RecordBatchingSink
     .builder()
@@ -110,4 +119,46 @@ object SimpleConfiguration {
     .batchStorage(batchStorage(fileSystem))
     .batchCommitQueueSize(1)
     .build()
+
+  def buildSinkByTopicPartition(fileSystem: FileSystem): Sink = DeduplicatingRecordBatchingSink
+    .builder()
+    .recordBatcher(recordBatcherByTopicPartition())
+    .batchStorage(batchStorageByTopicPartition(fileSystem))
+    .batchCommitQueueSize(1)
+    .interval(StreamInterval.OffsetRange(30))
+    .keyCacheSize(30)
+    .build()
+
+  private def recordBatcherByTopicPartition()
+      : PartitioningFileRecordBatcher[TopicPartition, AnnotatedProtoRecord[ComplexType]] = {
+    PartitioningFileRecordBatcher
+      .builder()
+      .recordFormatter(new GenericRecordFormatter[ComplexType])
+      .recordPartitioner((r, _) => r.topicPartition)
+      .fileBuilderFactory(_ =>
+        new AnnotatedProtoParquetFileBuilder[ComplexType](
+          Compression.NONE,
+          blockSize = 134217728,
+          pageSize = 1048576
+        )
+      )
+      .fileCommitStrategy(
+        MultiFileCommitStrategy.anyFile(parseFixedFileCommitStrategy())
+      )
+      .build()
+  }
+
+  private def batchStorageByTopicPartition(hadoopFileSystem: FileSystem): HadoopFileStorage[TopicPartition] = {
+    HadoopFileStorage
+      .builder()
+      .hadoopFS(hadoopFileSystem)
+      .stagingBasePath("/data/stage")
+      .destinationBasePath("/data/ingested")
+      .destinationFilePathFormatter(
+        new TopicPartitionFilePathFormatter(
+          Some("parquet")
+        )
+      )
+      .build()
+  }
 }

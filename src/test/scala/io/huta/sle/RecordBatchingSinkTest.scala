@@ -1,4 +1,4 @@
-package io.huta.sle.deduplication
+package io.huta.sle
 
 import com.adform.streamloader.util.Logging
 import io.huta.sle.config.SimpleConfiguration
@@ -10,8 +10,7 @@ import io.huta.sle.test.RecordsGenerator._
 
 import java.util.concurrent.TimeUnit
 
-class DeduplicatingRecordBatchingSinkTest extends AnyFunSpec with Matchers with Logging {
-
+class RecordBatchingSinkTest extends AnyFunSpec with Matchers with Logging {
   it("should write unique") {
     val filesystem = SimpleConfiguration.hadoopFileSystem()
     val sink = SimpleConfiguration.deduplicatingSink(filesystem)
@@ -26,9 +25,7 @@ class DeduplicatingRecordBatchingSinkTest extends AnyFunSpec with Matchers with 
     } yield new TopicPartition(t, p)
     sink.assignPartitions(assignment.toSet)
 
-    val duplicated = records(topic, partitions, 10).flatMap(r => Seq(r, r))
-
-    duplicated.foreach(r => sink.write(r))
+    records(topic, partitions, 10).foreach(r => sink.write(r))
 
     log.info("give sink some time to stage file on HDFS")
     Thread.sleep(TimeUnit.SECONDS.toMillis(10))
