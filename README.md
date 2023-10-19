@@ -28,7 +28,7 @@ Tools
     spark worker 1 - http://localhost:8081/
     spark worker 2 - http://localhost:8082/
     spark history - http://localhost:18081/
-
+    spark app - use https://github.com/HubertTatar/sle-spark
 Grafana
 
     Register new source as `http://prometheus:9090`
@@ -36,14 +36,11 @@ Grafana
     
 Metrics:
     
-    http://localhost:8081/metrics
+    http://localhost:7071/metrics
 
 Flags:
  
     -XX:MaxRamPercentage=80
-
-Todo:
- - working spark/zeppelin
 
 Links:
  - https://github.com/big-data-europe/docker-hadoop

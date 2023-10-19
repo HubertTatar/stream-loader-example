@@ -25,7 +25,7 @@ object Metrics {
   }
 
   def metricServer(registry: PrometheusMeterRegistry, executor: ExecutorService): HttpServer = {
-    val server = HttpServer.create(new InetSocketAddress(8081), 0)
+    val server = HttpServer.create(new InetSocketAddress(7071), 0)
     server.setExecutor(executor)
 
     server.createContext(
